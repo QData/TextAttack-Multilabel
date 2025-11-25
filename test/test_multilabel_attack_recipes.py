@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, MagicMock
-from textattack_multilabel.multilabel_acl2023 import MultilabelACL23
+from example_toxic_adv_examples.multilabel_acl2023 import MultilabelACL23
 
 
 def test_build_multilabel_acl23():

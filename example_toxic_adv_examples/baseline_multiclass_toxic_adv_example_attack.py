@@ -1,7 +1,6 @@
-from typing import Optional, Union, List
+from typing import Optional
 
-from textattack.attack_recipes import AttackRecipe
-from textattack.constraints.grammaticality import PartOfSpeech
+from textattack import Attack
 from textattack.constraints.pre_transformation import (
     RepeatModification,
     StopwordModification,
@@ -10,9 +9,7 @@ from textattack.constraints.pre_transformation import (
     MaxWordIndexModification
 )
 
-from textattack.constraints.semantics import WordEmbeddingDistance
 from textattack.constraints.semantics.sentence_encoders import SBERT, UniversalSentenceEncoder
-# from textattack.goal_functions import MultilabelClassificationGoalFunction
 from textattack.search_methods import BeamSearch
 from textattack.transformations import (
     WordSwapMaskedLM,
@@ -22,27 +19,44 @@ from textattack.transformations import (
     WordSwapNeighboringCharacterSwap,
     WordSwapRandomCharacterDeletion,
     WordSwapRandomCharacterInsertion,
-    WordSwapWordNet
 )
-     
-from textattack_multilabel.shared import PartOfSpeechTry, GreedyWordSwapWIRTruncated, MultilabelClassificationGoalFunction, AlzantotGeneticAlgorithm, AttackList
 
-class MultilabelACL23(AttackRecipe):
+from textattack.constraints.semantics import WordEmbeddingDistance
+from textattack.goal_functions import UntargetedClassification, TargetedClassification
+
+from textattack.attack_recipes import AttackRecipe
+from textattack.transformations import WordSwapWordNet
+
+from textattack_multilabel.attack_components import (
+    PartOfSpeechTry,
+    GreedyWordSwapWIRTruncated,
+    AlzantotGeneticAlgorithm,
+    AttackList,
+)
+from textattack_multilabel.goal_function import MultilabelClassificationGoalFunction
+
+class MulticlassACL23(AttackRecipe):
+
     @staticmethod
-    def build(
-        model_wrapper,
-        labels_to_maximize: Optional[Union[int, List[int]]] = 0,
-        labels_to_minimize: Optional[Union[int, List[int]]] = None,
-        maximize_target_score: Optional[float] = 0.5,
-        minimize_target_score: Optional[float] = 0.5,
-        wir_method: str = "delete",
-        pos_constraint: bool = True,
-        sbert_constraint: bool = False,
-        sbert_model_name: str = "all-mpnet-base-v2",
-        sbert_threshold: float = 0.75,
-        universal_encoder_threshold: float = 0.840845057,
-        **kwargs,
-    ):
+    def build(model_wrapper,
+              target_class: Optional[int] = None,
+              wir_method: str = "delete",
+              pos_constraint: bool = True,
+              sbert_constraint: bool = False
+              ):
+        """Build attack recipe.
+
+        Args:
+            model_wrapper (:class:`~textattack.models.wrappers.ModelWrapper`):
+                Model wrapper containing both the model and the tokenizer.
+            mlm (:obj:`bool`, `optional`, defaults to :obj:`False`):
+                If :obj:`True`, load `A2T-MLM` attack. Otherwise, load regular `A2T` attack.
+            target_class (:obj:`int`, `optional`, defaults to :obj:`None`):
+                if specified, will search perturbations to maximize the target class score
+
+        Returns:
+            :class:`~textattack.Attack`: A2T attack.
+        """
         constraints = [RepeatModification(), StopwordModification()]
 
         if pos_constraint:
@@ -52,29 +66,20 @@ class MultilabelACL23(AttackRecipe):
 
         constraints.append(MaxModificationRate(max_rate=0.1, min_threshold=4))
 
-        # sent_encoder = BERT(
-        #     model_name="sentence-transformers/all-MiniLM-L6-v2",
-        #     threshold=0.9,
-        #     metric="cosine",
-        # )
-
-        #
-        # constraints.append(sent_encoder)
-
         if sbert_constraint:
             print("Using SBERT constraint!")
 
             use_constraint = SBERT(
-                model_name=sbert_model_name,
-                threshold=sbert_threshold,
+                model_name='all-mpnet-base-v2',
+                threshold=0.85,
                 metric="cosine",
                 compare_against_original=True,
                 window_size=15,
-                skip_text_shorter_than_window=True,
+                skip_text_shorter_than_window=False,
             )
         else:
             use_constraint = UniversalSentenceEncoder(
-                threshold=universal_encoder_threshold,
+                threshold=0.840845057,
                 metric="angular",
                 compare_against_original=False,
                 window_size=15,
@@ -82,16 +87,6 @@ class MultilabelACL23(AttackRecipe):
             )
 
         constraints.append(use_constraint)
-
-        # constraints.append(UniversalSentenceEncoder(threshold=0.8))
-
-        # constraints.append(WordEmbeddingDistance(min_cos_sim=0.5))
-
-        # if mlm:
-        #     transformation = WordSwapMaskedLM(method="bae", max_candidates=20, min_confidence=0.0, batch_size=16)
-        # else:
-        #     transformation = WordSwapEmbedding(max_candidates=20)
-        #     constraints.append(WordEmbeddingDistance(min_cos_sim=0.8))
 
         transformation = CompositeTransformation(
             [
@@ -128,19 +123,12 @@ class MultilabelACL23(AttackRecipe):
             ]
         )
 
-        # transformation = WordSwapEmbedding(max_candidates=20)
-
-        #
-        # Goal is untargeted classification
-        #
-        goal_function = MultilabelClassificationGoalFunction(
-            model_wrapper,
-            labels_to_maximize=labels_to_maximize,
-            labels_to_minimize=labels_to_minimize,
-            maximize_target_score=maximize_target_score,
-            minimize_target_score=minimize_target_score,
-            model_batch_size=32,
-        )
+        if target_class is None:
+            # Goal is untargeted classification
+            goal_function = UntargetedClassification(model_wrapper, model_batch_size=32)
+        else:
+            # Goal is targeted classification
+            goal_function = TargetedClassification(model_wrapper, target_class=target_class, model_batch_size=32)
 
         if wir_method == 'gradient':
             #
@@ -164,18 +152,13 @@ class MultilabelACL23(AttackRecipe):
         else: # wir_method in ['delete', 'weighted-saliency', 'unk']
             search_method = GreedyWordSwapWIRTruncated(wir_method=wir_method)
 
-        return AttackList(goal_function, constraints, transformation, search_method)
+        return Attack(goal_function, constraints, transformation, search_method)
 
-
-
-class MultilabelACL23Transform(AttackRecipe):
+class MulticlassACL23Transform(AttackRecipe):
 
     @staticmethod
     def build(model_wrapper,
-              labels_to_maximize: Optional[Union[int, List[int]]] = 0,
-              labels_to_minimize: Optional[Union[int, List[int]]] = None,
-              maximize_target_score: Optional[float] = 0.5,
-              minimize_target_score: Optional[float] = 0.5,
+              target_class: Optional[int] = None,
               wir_method: str = "weighted-saliency",
               transform_method: str = "glove",
               knn: int = 20,
@@ -197,8 +180,7 @@ class MultilabelACL23Transform(AttackRecipe):
 
         if sbert_constraint:
             print("Using SBERT constraint!")
-
-            use_constraint = BERT(
+            use_constraint = SBERT(
                 model_name='all-mpnet-base-v2',
                 threshold=0.85,
                 metric="cosine",
@@ -241,21 +223,12 @@ class MultilabelACL23Transform(AttackRecipe):
         #     ]
         # )
 
-        # if target_class is None:
-        #     # Goal is untargeted classification
-        #     goal_function = UntargetedClassification(model_wrapper, model_batch_size=32)
-        # else:
-        #     # Goal is targeted classification
-        #     goal_function = TargetedClassification(model_wrapper, target_class=target_class, model_batch_size=32)
-
-        goal_function = MultilabelClassificationGoalFunction(
-            model_wrapper,
-            labels_to_maximize=labels_to_maximize,
-            labels_to_minimize=labels_to_minimize,
-            maximize_target_score=maximize_target_score,
-            minimize_target_score=minimize_target_score,
-            model_batch_size=32,
-        )
+        if target_class is None:
+            # Goal is untargeted classification
+            goal_function = UntargetedClassification(model_wrapper, model_batch_size=32)
+        else:
+            # Goal is targeted classification
+            goal_function = TargetedClassification(model_wrapper, target_class=target_class, model_batch_size=32)
 
         if wir_method == 'gradient':
             #
@@ -279,4 +252,4 @@ class MultilabelACL23Transform(AttackRecipe):
         else: # wir_method in ['delete', 'weighted-saliency', 'unk']
             search_method = GreedyWordSwapWIRTruncated(wir_method=wir_method)
 
-        return AttackList(goal_function, constraints, transformation, search_method)
+        return Attack(goal_function, constraints, transformation, search_method)

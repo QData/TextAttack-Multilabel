@@ -1,53 +1,185 @@
-# TextAttack Multi-label Adversarial Examples Generator
+# TextAttack-Multilabel
 
-This folder contains scripts for generating multi-label adversarial examples by extending the [TextAttack](https://github.com/QData/TextAttack) library for multi-label toxicity classification tasks.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://badge.fury.io/py/textattack-multilabel.svg)](https://pypi.org/project/textattack-multilabel/)
 
-## Python Package Structure
+A professional extension of [TextAttack](https://github.com/QData/TextAttack) for multi-label adversarial example generation, with focus on toxicity classification. Generate adversarial examples that flip multiple labels simultaneously while preserving semantic meaning and grammatical correctness.
 
-- `__init__.py`: Package initialization.
-- `multilabel_acl2023.py`: Core attack recipes for multi-label scenarios, including constraints (grammar, semantics), transformations (word/character swaps), goal functions, and search methods (gradient, beam, genetic, etc.).
-- `shared.py`: Shared utilities like `MultilabelClassificationGoalFunction`, custom search methods (`GreedyWordSwapWIRTruncated`), and result handling.
-- `model.py`: `MultilabelModelWrapper` for compatibility with TextAttack's model interface.
+## Features
 
-## File Structure and Functional Modules
+- 🏗️ **Modular Architecture**: Support for multiple models (Detoxify, custom HF models) and datasets
+- ⚙️ **CLI Interface**: User-friendly command-line tools for all major operations
+- 📊 **Configuration-Driven**: YAML configuration for flexible attack parameters
+- 🔬 **Professional Testing**: Comprehensive test suite with coverage reporting
+- 📚 **Rich Examples**: Jupyter notebooks and tutorials
+- 🚀 **Easy Installation**: Pip-installable with proper dependency management
+
+## Installation
+
+### Quick Install (Recommended)
+
+```bash
+
+# install from source
+git clone https://github.com/QData/TextAttack-Multilabel
+cd TextAttack-Multilabel
+pip install -e .
+```
+
+### Development Installation
+
+```bash
+# Install with development dependencies
+pip install -e ".[dev]"
+
+# Run setup script (optional, creates conda environment)
+python install_env.py
+```
+
+## Quick Start
+
+### Using the CLI (Recommended)
+
+```bash
+# Show help
+textattack-multilabel --help
+
+# Run a basic attack on benign samples
+textattack-multilabel attack --attack benign
+
+# Preprocess and analyze data
+textattack-multilabel preprocess --data data.csv --analyze --sample benign
+
+# Run test suite
+textattack-multilabel test --coverage
+```
+
+### Using Scripts Directly
+
+```bash
+# Download data
+python example_toxic_adv_examples/download_data.py
+
+# Run main attack script
+python example_toxic_adv_examples/attack_multilabel_tae_main.py
+
+# Run baseline example
+python example_toxic_adv_examples/baseline_multiclass_toxic_adv_example_attack.py
+
+# Run ACL23 example
+python example_toxic_adv_examples/multilabel_acl2023.py
+
+# Run tests
+python test/run_tests.py --coverage
+```
+
+## File Structure
 
 ```
-textattack_muitilabel/
-├── attack_multilabel.py
-├── download_data.py
-├── install_env.py
-├── README.md
-├── test/
-│   ├── __init__.py
-│   ├── test_attack_recipes.py
-│   ├── test_model_wrapper.py
-│   └── test_shared.py
-└── textattack_multilabel/
+TextAttack-Multilabel/
+├── .gitignore                          # Git ignore file
+├── pyproject.toml                      # Package configuration
+├── install_env.py                      # Environment setup script
+├── LICENSE                             # License file
+├── README.md                           # This file
+├── example_toxic_adv_examples/         # Example scripts and configs
+│   ├── attack_multilabel_tae_main.py   # Main attack script
+│   ├── baseline_multiclass_toxic_adv_example_attack.py  # Baseline attack example
+│   ├── download_data.py                # Data download script
+│   ├── multilabel_acl2023.py           # ACL23 multilabel example
+│   ├── config/                         # Configuration files
+│   │   └── toxic_adv_examples_config.yaml  # Configuration for examples
+│   └── __pycache__/                    # Python cache
+├── textattack_multilabel/              # Main package
+│   ├── __init__.py                     # Package initialization
+│   ├── attack_components.py            # Attack components
+│   ├── goal_function.py                # Goal function implementations
+│   ├── multilabel_model_wrapper.py     # Model wrapper for multilabel
+│   └── multilabel_target_attack_recipe.py  # Multilabel attack recipes
+└── test/                               # Test suite
     ├── __init__.py
-    ├── model.py
-    ├── multiclass_acl2023.py
-    ├── multilabel_acl2023.py
-    └── shared.py
+    ├── run_tests.py                    # Test runner
+    ├── test_model_wrapper.py
+    ├── test_multilabel_attack_recipes.py
+    └── test_shared.py
 ```
 
-### Root Files
-- `attack_multilabel.py`: Main script for generating multi-label adversarial examples using TextAttack recipes.
-- `download_data.py`: Secure Python script to download Jigsaw Toxic Comments dataset using Kaggle API with environment variables.
-- `install_env.py`: Secure Python script for environment setup using subprocess validation.
-- `README.md`: This documentation file.
+## Configuration
 
-### test/ (Testing)
-- `__init__.py`: Test package initialization.
-- `test_attack_recipes.py`: Unit tests for attack recipe building and configuration.
-- `test_model_wrapper.py`: Tests for MultilabelModelWrapper functionality.
-- `test_shared.py`: Tests for shared components like goal functions and search methods.
+The package uses YAML configuration files for flexible setup:
 
-### textattack_multilabel/ (Core Package)
-- `__init__.py`: Package initialization, exposes MultilabelACL23 and related classes.
-- `multiclass_acl2023.py`: Contains MultilabelACL23Transform attack recipe (alternative implementation).
-- `multilabel_acl2023.py`: Core attack recipes (MultilabelACL23, MultilabelACL23Transform) with multi-label goal functions, constraints, transformations, and search methods.
-- `shared.py`: Shared components like PartOfSpeechTry, GreedyWordSwapWIRTruncated, MultilabelClassificationGoalFunction, custom search algorithms.
-- `model.py`: MultilabelModelWrapper adapting models for TextAttack's multi-label interface.
+```yaml
+# config/attack_config.yaml
+defaults:
+  model:
+    type: "detoxify"  # or "custom"
+    variant: "original"
+  dataset:
+    name: "jigsaw_toxic_comments"
+    sample_size: 500
+  attack:
+    recipe: "MultilabelACL23"
+    labels_to_maximize: []  # maximize all toxic labels
+    labels_to_minimize: []  # minimize currently toxic labels
+    # ... more options
+```
+
+## Examples
+
+### Python API Usage
+
+```python
+from textattack_multilabel import MultilabelModelWrapper, MultilabelACL23
+
+# Load your model
+model_wrapper = MultilabelModelWrapper(your_model, your_tokenizer, multilabel=True)
+
+# Create attack recipe
+attack = MultilabelACL23.build(
+    model_wrapper=model_wrapper,
+    labels_to_maximize=[0, 1, 2, 3, 4, 5],  # maximize all toxic labels
+    labels_to_minimize=[],
+    wir_method="delete"
+)
+
+# Run attack
+attacker = textattack.Attacker(attack, dataset)
+results = attacker.attack_dataset()
+```
+
+### Jupyter Notebook Tutorial
+
+See `examples/getting_started.ipynb` for a complete walkthrough including:
+- Model setup and testing
+- Creating attack recipes
+- Running attacks on sample data
+- Results analysis
+- Configuration examples
+
+## Scripts Overview
+
+### Core Scripts
+
+- **`attack_multilabel_tae_main.py`**: Modular attack generation supporting multiple models and datasets
+- **`download_data.py`**: Secure Kaggle dataset download with environment variables
+
+### Utility Scripts
+
+- **`install_env.py`**: Cross-platform environment setup with verification
+- **`run_tests.py`**: Comprehensive test runner with coverage and parallel execution
+
+### Tests
+
+Run the complete test suite:
+```bash
+python test/run_tests.py --coverage
+```
+
+Test structure:
+- **Unit tests**: Individual function/component testing
+- **Integration tests**: Full pipeline testing
+- **Coverage reporting**: HTML coverage reports generated
 
 ## Setup Environment
 
@@ -62,56 +194,11 @@ This creates a conda environment (py3.8) with required dependencies: textattack[
 Download the Jigsaw Toxic Comments dataset from Kaggle (requires KAGGLE_USERNAME and KAGGLE_KEY environment variables):
 
 ```bash
-python download_data.py
+python example_toxic_adv_examples/download_data.py
 ```
 
 This uses environment variables for Kaggle API credentials instead of plaintext files for improved security.
 
 ## Generate Adversarial Examples
 
-### Attack Toxic Samples (Generate Benign Adversaries)
-
-Attack harmful examples from the Jigsaw test split to produce benign adversarial examples:
-
-```shell
-python attack_multilabel.py --output attack_harmful.parquet --attack harmful --data data/jigsaw_toxic_comments/test.csv
-```
-
-### Attack Benign Samples (Generate Toxic Adversaries)
-
-Attack benign examples to produce harmful adversarial examples:
-
-```shell
-python attack_multilabel.py --output attack_benign.parquet --attack benign --data data/jigsaw_toxic_comments/test.csv
-```
-
-Outputs parquet files containing perturbed texts, predictions, and ground truth labels.
-
-## Testing
-
-Run the test suite to verify functionality:
-
-```bash
-cd textattack_muitilabel
-pip install pytest  # if not already installed
-python -m pytest test/
-```
-
-Tests cover:
-- Attack recipe building and configuration
-- Model wrapper functionality for single and multi-label modes
-- Shared components (goal functions, search methods)
-
-## Data Flow
-
-1. Load Jigsaw dataset (6 toxicity labels: toxic, severe_toxic, obscene, threat, insult, identity_hate).
-2. Sample 500 benign/toxic examples.
-3. Use detoxify as target model.
-
-## Compatibility
-
-- **PyTorch**: Requires a PyTorch build that supports `register_full_backward_hook`. Use `PyTorch >= 1.9` (recommended) or a newer stable release to ensure backward-hook behavior used in `textattack_multilabel/shared.py` works correctly.
-- **transformers**: Recommended `transformers >= 4.10`. Newer releases are supported, but ensure tokenizer and model APIs (e.g., `model.config` and tokenizer `model_max_length`) are available.
-- **TextAttack**: Tested with `textattack >= 0.4.0`. The package relies on TextAttack's `Attack`, `GoalFunction`, and `SearchMethod` APIs; if you encounter attribute errors, verify your TextAttack version.
-
-These are recommendations to reduce compatibility issues (especially around gradient hooks and model/tokenizer interfaces). If you use older library versions and encounter errors related to backward hooks or tokenizer/model attributes, upgrading to the versions above is the quickest remedy.
+See the example scripts in `example_toxic_adv_examples/` for running attack examples, such as `multilabel_acl2023.py`.

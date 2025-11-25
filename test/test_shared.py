@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import Mock
-from textattack_multilabel.shared import MultilabelClassificationGoalFunction, GreedyWordSwapWIRTruncated
+
+from textattack_multilabel.attack_components import GreedyWordSwapWIRTruncated
+from textattack_multilabel.goal_function import MultilabelClassificationGoalFunction
 
 
 def test_multilabel_goal_function():

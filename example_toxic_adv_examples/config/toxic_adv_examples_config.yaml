@@ -1,0 +1,62 @@
+# TextAttack-Multilabel Configuration File
+# This file contains default parameters for adversarial attacks
+
+defaults:
+  model:
+    type: "detoxify"  # Options: "detoxify", "custom"
+    variant: "original"  # detoxify variant: "original", "unbiased", "multilingual"
+
+  dataset:
+    name: "jigsaw_toxic_comments"  # or "custom"
+    path: "data/jigsaw_toxic_comments/test.csv"
+    benign_threshold: 0.5
+    toxic_threshold: 0.5
+    sample_size: 500
+
+  attack:
+    recipe: "MultilabelACL23"  # Options: "MultilabelACL23", "MultilabelACL23Transform"
+    wir_method: "unk"  # Options: "delete", "weighted-saliency", "unk", "gradient", "beam", "genetic"
+    transform_method: "composite"  # For transform recipe: "glove", "wordnet", "mlm"
+
+    # Labels configuration
+    labels_to_maximize: []  # Leave empty to maximize all toxic labels implicitly
+    labels_to_minimize: []  # Leave empty to minimize all currently toxic labels
+    maximize_target_score: 0.5
+    minimize_target_score: 0.5
+
+    # Constraints
+    constraints:
+      pos_constraint: true
+      sbert_constraint: false
+      sbert_model_name: "all-mpnet-base-v2"
+      sbert_threshold: 0.75
+      universal_encoder_threshold: 0.840845057
+
+    # Search parameters
+    search_params:
+      genetic:
+        pop_size: 25
+        max_iters: 10
+        give_up_if_no_improvement: true
+      beam:
+        beam_width: 3
+
+  output:
+    format: "parquet"  # Options: "parquet", "csv", "json"
+    prefix: "attack_results"
+    include_original: true
+    include_metadata: true
+
+# Custom model configuration (for non-detoxify models)
+custom_model:
+  model_path: ""  # Path or HuggingFace model name
+  tokenizer_path: ""  # Path or HuggingFace tokenizer name
+  multilabel: true  # Whether model outputs multilabel probabilities
+  labels: []  # List of label names
+  device: "cuda"  # or "cpu"
+
+# Custom dataset configuration
+custom_dataset:
+  format: "csv"  # Options: "csv", "json", "text"
+  text_column: "text"
+  label_columns: []  # For multilabel, list of column names

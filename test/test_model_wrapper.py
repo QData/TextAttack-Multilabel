@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock
 import torch
-from textattack_multilabel.model import MultilabelModelWrapper
+from src.textattack_multilabel.multilabel_model_wrapper import MultilabelModelWrapper
 
 
 def test_multilabel_model_wrapper():
