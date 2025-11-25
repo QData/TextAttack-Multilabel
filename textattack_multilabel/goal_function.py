@@ -136,10 +136,14 @@ class MultilabelClassificationGoalFunction(GoalFunction):
     def _is_goal_complete(
         self, model_output: "torch.Tensor", attacked_text: str
     ) -> "torch.bool":
-        """Return True is goal is completed."""
+        """Return True if goal is completed.
+
+        For maximize labels: ALL must exceed the maximize_target_score
+        For minimize labels: ALL must fall below the minimize_target_score
+        """
         max_complete = True if len(self.labels_to_maximize) == 0 else (
             model_output[self.labels_to_maximize] > self.maximize_target_score
-        ).any()
+        ).all()  # Changed from .any() to .all() - all labels must exceed threshold
 
         min_complete = True if len(self.labels_to_minimize) == 0 else (
             model_output[self.labels_to_minimize] < self.minimize_target_score

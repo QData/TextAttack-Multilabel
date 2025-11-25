@@ -137,7 +137,6 @@ def main():
             print("\n🚀 Environment setup complete!")
             print(f"Activate with: conda activate {env_name}")
             print(f"Run tests with: conda run -n {env_name} pytest test/")
-            print(f"Generate attacks: conda run -n {env_name} python scripts/attack_multilabel.py [args]")
         else:
             print("\n⚠️  Setup completed but verification failed. Check the output above.")
 

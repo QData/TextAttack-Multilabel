@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, MagicMock
-from example_toxic_adv_examples.multilabel_acl2023 import MultilabelACL23
+from textattack_multilabel import MultilabelACL23
 
 
 def test_build_multilabel_acl23():
@@ -38,4 +38,11 @@ def test_build_multilabel_acl23_transform():
         transform_method="wordnet",
         wir_method="delete"
     )
+
+    # Assertions to validate the attack recipe was built correctly
+    assert attack is not None
+    assert hasattr(attack, 'goal')
+    assert hasattr(attack, 'constraints')
+    assert hasattr(attack, 'transformation')
+    assert hasattr(attack, 'search_method')
 

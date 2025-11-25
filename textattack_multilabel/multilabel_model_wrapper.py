@@ -1,63 +1,18 @@
 from typing import List, Optional, Union
 
-from textattack.goal_functions import GoalFunction
 import torch
-import numpy as np
-
-from textattack.goal_function_results import GoalFunctionResult
-from textattack.search_methods import GreedyWordSwapWIR, BeamSearch
-from textattack.constraints.grammaticality import PartOfSpeech
-from torch.nn.functional import softmax
-
 import transformers
 
-import textattack
 from textattack.models.helpers import T5ForTextToText
 from textattack.models.tokenizers import T5Tokenizer
-
 from textattack.models.wrappers.pytorch_model_wrapper import PyTorchModelWrapper
-
-from textattack.attack import Attack
-
-from abc import ABC, abstractmethod
-
-import numpy as np
-import torch
-
-from textattack.goal_function_results import GoalFunctionResultStatus
-from textattack.search_methods import PopulationBasedSearch, PopulationMember
-from textattack.shared.validators import transformation_consists_of_word_swaps
-
-
-from collections import OrderedDict
-from typing import List, Union
-
-import lru
-import numpy as np
-import torch
-
-import textattack
-from textattack.attack_results import (
-    FailedAttackResult,
-    MaximizedAttackResult,
-    SkippedAttackResult,
-    SuccessfulAttackResult,
-)
-
-from textattack.constraints import Constraint, PreTransformationConstraint
-from textattack.goal_function_results import GoalFunctionResultStatus
-from textattack.goal_functions import GoalFunction
-from textattack.models.wrappers import ModelWrapper
-from textattack.search_methods import SearchMethod
-from textattack.shared import AttackedText, utils
-from textattack.transformations import CompositeTransformation, Transformation
 
 
 
 class MultilabelModelWrapper(PyTorchModelWrapper):
     """Loads a HuggingFace ``transformers`` model and tokenizer."""
 
-    def __init__(self, model, tokenizer, multilabel=True, max_length=None, device='cuda'):
+    def __init__(self, model, tokenizer, multilabel=True, max_length=None, device=None):
         assert isinstance(
             model, (transformers.PreTrainedModel, T5ForTextToText)
         ), f"`model` must be of type `transformers.PreTrainedModel`, but got type {type(model)}."
@@ -69,6 +24,12 @@ class MultilabelModelWrapper(PyTorchModelWrapper):
                 T5Tokenizer,
             ),
         ), f"`tokenizer` must of type `transformers.PreTrainedTokenizer` or `transformers.PreTrainedTokenizerFast`, but got type {type(tokenizer)}."
+
+        # Auto-detect device if not specified
+        if device is None:
+            import torch
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
         self.device = device
         self.model = model.to(self.device)
         self.tokenizer = tokenizer

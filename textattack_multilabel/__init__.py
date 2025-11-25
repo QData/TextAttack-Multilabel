@@ -19,10 +19,9 @@ from .attack_components import (
 )
 
 # Attack recipes
-from .multilabel_target_attack_recipe import (
-    MultilabelACL23_recipe,
-    MultilabelACL23Transform,
-)
+from .multilabel_target_attack_recipe import MultilabelACL23_recipe
+from .multilabel_transform_attack_recipe import MultilabelACL23Transform
+
 # Alias for backward compatibility
 MultilabelACL23 = MultilabelACL23_recipe
 

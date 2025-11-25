@@ -1,0 +1,48 @@
+# TextAttack-Multilabel Attack Configuration
+# This file is used by run_multilabel_tae_main.py
+
+defaults:
+  model:
+    type: "detoxify"  # Options: "detoxify", "custom"
+    variant: "original"  # detoxify variants: "original", "unbiased", "multilingual"
+
+  dataset:
+    name: "jigsaw_toxic_comments"
+    path: "data/jigsaw_toxic_comments/test.csv"
+    benign_threshold: 0.5  # Samples with all labels < this are benign
+    toxic_threshold: 0.5   # Samples with any label > this are toxic
+    sample_size: 500       # Max samples to use per category
+
+  attack:
+    recipe: "MultilabelACL23"
+    wir_method: "unk"  # Options: "unk", "delete", "weighted-saliency", "gradient", "random", "beam", "genetic"
+
+    # Label configuration (empty means use all labels)
+    labels_to_maximize: []  # For benign→toxic: maximize these labels
+    labels_to_minimize: []  # For toxic→benign: minimize these labels
+    maximize_target_score: 0.5
+    minimize_target_score: 0.5
+
+    # Constraints
+    constraints:
+      pos_constraint: true       # Maintain part-of-speech tags
+      sbert_constraint: false    # Use semantic similarity constraint
+
+  output:
+    format: "parquet"  # Options: "parquet", "csv"
+    prefix: "attack_results"
+
+# Custom model configuration (when model.type = "custom")
+custom_model:
+  model_path: ""
+  tokenizer_path: ""
+  multilabel: true
+  labels: ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+  device: "cuda"
+
+# Custom dataset configuration (when dataset.name = "custom")
+custom_dataset:
+  format: "csv"
+  data_path: ""
+  text_column: "text"
+  label_columns: []

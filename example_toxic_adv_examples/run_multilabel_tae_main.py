@@ -21,7 +21,7 @@ from textattack import Attacker
 from textattack.loggers import CSVLogger
 from textattack_multilabel import MultilabelModelWrapper
 from textattack_multilabel.attack_components import AttackResult_new_diff_color
-from textattack_multilabel.multilabel_target_attack import MultilabelACL23_recipe as MultilabelACL23
+from textattack_multilabel.multilabel_target_attack_recipe import MultilabelACL23_recipe as MultilabelACL23
 import nltk
 
 nltk.download('omw-1.4', quiet=True)

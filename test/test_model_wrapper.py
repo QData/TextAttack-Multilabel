@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock
 import torch
-from src.textattack_multilabel.multilabel_model_wrapper import MultilabelModelWrapper
+from textattack_multilabel.multilabel_model_wrapper import MultilabelModelWrapper
 
 
 def test_multilabel_model_wrapper():
@@ -31,6 +31,14 @@ def test_multilabel_model_wrapper():
 def test_model_wrapper_single_label():
     """Test with single-label mode."""
     mock_model = Mock()
+    mock_model.eval.return_value = None
+    mock_model.to.return_value = mock_model
+
     mock_tokenizer = Mock()
 
     wrapper = MultilabelModelWrapper(mock_model, mock_tokenizer, multilabel=False)
+
+    # Assertions to validate single-label mode initialization
+    assert wrapper.model == mock_model
+    assert wrapper.tokenizer == mock_tokenizer
+    assert wrapper.multilabel == False

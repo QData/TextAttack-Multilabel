@@ -1,0 +1,14 @@
+# Include documentation and license files
+include README.md
+include LICENSE
+include pyproject.toml
+
+# Include example configuration files
+recursive-include example_toxic_adv_examples/config *.yaml *.yml
+
+# Exclude test files and caches
+recursive-exclude test *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store
+recursive-exclude * .git*

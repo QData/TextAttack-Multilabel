@@ -6,8 +6,6 @@ import numpy as np
 import torch
 from torch.nn.functional import softmax
 
-torch.cuda.empty_cache()
-
 from textattack.attack_results import (
     FailedAttackResult,
     MaximizedAttackResult,
