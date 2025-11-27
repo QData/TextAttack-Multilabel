@@ -439,3 +439,40 @@ Built on top of [TextAttack](https://github.com/QData/TextAttack) by QData Lab.
 - [Examples](example_toxic_adv_examples/README.md)
 - [Testing](#-testing)
 - [API Reference](#-package-structure)
+
+
+
+## Please Cite
+
+```
+@inproceedings{bespalov-etal-2023-towards,
+    title = "Towards Building a Robust Toxicity Predictor",
+    author = "Bespalov, Dmitriy  and
+      Bhabesh, Sourav  and
+      Xiang, Yi  and
+      Zhou, Liutong  and
+      Qi, Yanjun",
+    editor = "Sitaram, Sunayana  and
+      Beigman Klebanov, Beata  and
+      Williams, Jason D",
+    booktitle = "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 5: Industry Track)",
+    month = jul,
+    year = "2023",
+    address = "Toronto, Canada",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2023.acl-industry.56/",
+    doi = "10.18653/v1/2023.acl-industry.56",
+    pages = "581--598",
+    abstract = "Recent NLP literature pays little attention to the robustness of toxicity language predictors, while these systems are most likely to be used in adversarial contexts. This paper presents a novel adversarial attack, {\textbackslash}texttt{\{}ToxicTrap{\}}, introducing small word-level perturbations to fool SOTA text classifiers to predict toxic text samples as benign. {\textbackslash}texttt{\{}ToxicTrap{\}} exploits greedy based search strategies to enable fast and effective generation of toxic adversarial examples. Two novel goal function designs allow {\textbackslash}texttt{\{}ToxicTrap{\}} to identify weaknesses in both multiclass and multilabel toxic language detectors. Our empirical results show that SOTA toxicity text classifiers are indeed vulnerable to the proposed attacks, attaining over 98{\textbackslash}{\%} attack success rates in multilabel cases. We also show how a vanilla adversarial training and its improved version can help increase robustness of a toxicity detector even against unseen attacks."
+}
+```
+
+
+```
+@article{zhu2024taebench,
+  title={TaeBench: Improving Quality of Toxic Adversarial Examples},
+  author={Zhu, Xuan and Bespalov, Dmitriy and You, Liwen and Kulkarni, Ninad and Qi, Yanjun},
+  journal={Proceeding of Annual Conference of the Nations of the Americas Chapter of the Association  for Computational Linguistics (NAACL) Industry Track},
+  year={2025}
+}
+```

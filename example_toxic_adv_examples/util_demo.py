@@ -111,9 +111,7 @@ def display_attack_results(results_df, attack_direction, stats=None):
 
     print(f"📊 Summary:")
     print(f"   Total samples: {total_samples}")
-    print(f"   Successful attacks: {successful}")
-    print(f"   Success rate: {success_rate:.1f}%")
-
+ 
     if successful > 0:
         # Calculate average toxicity reduction
         valid_results = results_df[results_df['perturbed_text'].notna()]
