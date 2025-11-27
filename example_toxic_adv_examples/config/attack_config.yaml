@@ -8,18 +8,18 @@ defaults:
 
   dataset:
     name: "jigsaw_toxic_comments"
-    path: "data/jigsaw_toxic_comments/test.csv"
+    path: "./data/jigsaw_toxic_comments/train.csv"
     benign_threshold: 0.5  # Samples with all labels < this are benign
     toxic_threshold: 0.5   # Samples with any label > this are toxic
-    sample_size: 500       # Max samples to use per category
+    sample_size: 5         # Max samples to use per category
 
   attack:
     recipe: "MultilabelACL23"
     wir_method: "unk"  # Options: "unk", "delete", "weighted-saliency", "gradient", "random", "beam", "genetic"
 
-    # Label configuration (empty means use all labels)
-    labels_to_maximize: []  # For benign→toxic: maximize these labels
-    labels_to_minimize: []  # For toxic→benign: minimize these labels
+    # Label configuration dynamically determined by attack direction
+    # labels_to_maximize: []  # For benign→toxic: maximize these labels
+    # labels_to_minimize: []  # For toxic→benign: minimize these labels
     maximize_target_score: 0.5
     minimize_target_score: 0.5
 

@@ -12,7 +12,6 @@ A professional extension of [TextAttack](https://github.com/QData/TextAttack) fo
 - 🎯 **Multi-label Attacks**: Attack multiple labels simultaneously (maximize/minimize different label sets)
 - 🏗️ **Modular Architecture**: Support for multiple models (Detoxify, custom HuggingFace models)
 - 🔬 **Multiple Attack Recipes**: Composite transformations and single-method attacks
-- ⚡ **Gradient-Based Attacks**: Support for gradient-guided word importance ranking
 - 📊 **Configuration-Driven**: YAML configuration for flexible attack parameters
 - 🧪 **Comprehensive Testing**: 78+ test functions with 45% code coverage
 - 📈 **Built-in Analysis**: Attack success metrics, query statistics, and result visualization
@@ -29,6 +28,12 @@ git clone https://github.com/QData/TextAttack-Multilabel
 cd TextAttack-Multilabel
 pip install -e .
 ```
+
+### Enviroment Setup and Verify 
+```bash
+python install_env.py
+```
+
 
 ### Development Installation
 
@@ -93,7 +98,7 @@ model_wrapper = MultilabelModelWrapper(
 )
 
 # Build attack: maximize toxic labels (make benign text toxic)
-attack = MultilabelACL23_recipe.build(
+mattack = MultilabelACL23_recipe.build(
     model_wrapper=model_wrapper,
     labels_to_maximize=[0, 1, 2, 3, 4, 5],  # All 6 toxic labels
     labels_to_minimize=[],
@@ -103,7 +108,7 @@ attack = MultilabelACL23_recipe.build(
 # Run attack
 import textattack
 dataset = textattack.datasets.Dataset([("Sample text", [0.1, 0.2, 0.3, 0.1, 0.2, 0.1])])
-attacker = textattack.Attacker(attack, dataset)
+attacker = textattack.Attacker(mattack, dataset)
 results = attacker.attack_dataset()
 ```
 
@@ -113,7 +118,7 @@ results = attacker.attack_dataset()
 # Run attacks with configuration file
 python example_toxic_adv_examples/run_multilabel_tae_main.py \
   --config example_toxic_adv_examples/config/attack_config.yaml \
-  --attack benign
+  --attack toxic
 ```
 
 ## 📖 Package Structure

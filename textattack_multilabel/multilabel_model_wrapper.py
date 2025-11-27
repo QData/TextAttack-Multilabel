@@ -28,7 +28,10 @@ class MultilabelModelWrapper(PyTorchModelWrapper):
         # Auto-detect device if not specified
         if device is None:
             import torch
-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            if torch.backends.mps.is_available():
+                device = 'mps'
+            else:
+                device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.device = device
         self.model = model.to(self.device)
@@ -160,4 +163,3 @@ class MultilabelModelWrapper(PyTorchModelWrapper):
                 )
                 for x in inputs
             ]
-

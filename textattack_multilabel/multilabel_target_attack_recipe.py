@@ -14,6 +14,10 @@ from textattack.constraints.pre_transformation import (
     MaxModificationRate,
     MaxWordIndexModification
 )
+from textattack.constraints.semantics.sentence_encoders import (
+    SBERT,
+    UniversalSentenceEncoder,
+)
 from textattack.constraints.semantics import WordEmbeddingDistance
 from textattack.search_methods import BeamSearch
 from textattack.transformations import (
@@ -79,16 +83,12 @@ class MultilabelACL23_recipe(AttackRecipe):
                 window_size=15,
                 skip_text_shorter_than_window=True,
             )
+            constraints.append(use_constraint)
         else:
-            use_constraint = UniversalSentenceEncoder(
-                threshold=universal_encoder_threshold,
-                metric="angular",
-                compare_against_original=False,
-                window_size=15,
-                skip_text_shorter_than_window=True,
-            )
-
-        constraints.append(use_constraint)
+            # Skip UniversalSentenceEncoder to avoid TensorFlow Hub issues
+            # that can cause hanging during model loading
+            print("Skipping UniversalSentenceEncoder constraint to avoid potential TensorFlow Hub loading issues")
+            pass
 
         # constraints.append(UniversalSentenceEncoder(threshold=0.8))
 

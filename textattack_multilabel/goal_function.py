@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+import time
 
 import numpy as np
 import torch
@@ -82,6 +83,13 @@ class MultilabelClassificationGoalFunction(GoalFunction):
 
     def _process_model_outputs(self, inputs, outputs):
         """Processes and validates a list of model outputs."""
+        if len(inputs) <= 3:  # Only log for small batches to avoid spam
+            print(f"Making model prediction on {len(inputs)} inputs")
+            # Log the first few words of first input if it's a string
+            if inputs and isinstance(inputs[0], str):
+                first_words = inputs[0].split()[:5]
+                print(f"Sample input: {' '.join(first_words)}...")
+
         # Automatically cast a list or ndarray of predictions to a tensor.
         if isinstance(outputs, list) or isinstance(outputs, np.ndarray):
             outputs = torch.tensor(outputs)

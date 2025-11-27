@@ -90,7 +90,9 @@ def install_packages(env_name):
         "kaggle>=1.5.12",
         "sentence-transformers>=2.0.0",
         "pandas>=1.3.0",
-        "numpy>=1.21.0"
+        "numpy>=1.21.0",
+        "nltk>=3.8",
+        "tensorflow_hub>=0.12.0"
     ])
 
 

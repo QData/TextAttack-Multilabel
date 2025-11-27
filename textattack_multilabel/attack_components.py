@@ -77,8 +77,7 @@ def AttackResult_new_diff_color(self, color_method=None):
 
 class GreedyWordSwapWIRTruncated(GreedyWordSwapWIR):
     def __init__(self, wir_method="unk", unk_token="[UNK]", truncate_words_to=-1):
-        self.wir_method = wir_method
-        self.unk_token = unk_token
+        super().__init__(wir_method=wir_method, unk_token=unk_token)
         self.truncate_words_to = truncate_words_to
 
     def _get_unk_scores(self, indices_to_order):
@@ -161,6 +160,8 @@ class GreedyWordSwapWIRTruncated(GreedyWordSwapWIR):
 
     def _get_index_order(self, initial_text, max_len=-1):
         """Returns word indices of ``initial_text`` in descending order of importance."""
+        print(f"Calculating word importance ranking using method: {self.wir_method}")
+        self.initial_text = initial_text
         if self.wir_method == "gradient":
             len_text, indices_to_order = self.get_indices_to_order(
                 initial_text,
@@ -170,12 +171,16 @@ class GreedyWordSwapWIRTruncated(GreedyWordSwapWIR):
             len_text, indices_to_order = self.get_indices_to_order(initial_text)
 
         if self.wir_method == "unk":
+            print("Getting UNK scores...")
             index_scores, search_over = self._get_unk_scores(indices_to_order)
         elif self.wir_method == "weighted-saliency":
+            print("Getting weighted saliency scores...")
             index_scores, search_over = self._get_saliency_scores(indices_to_order, len_text)
         elif self.wir_method == "delete":
+            print("Getting delete scores...")
             index_scores, search_over = self._get_delete_scores(indices_to_order)
         elif self.wir_method == "gradient":
+            print("Getting gradient scores...")
             index_scores, search_over = self._get_gradient_scores(indices_to_order, len_text)
         elif self.wir_method == "random":
             index_order = indices_to_order
@@ -187,6 +192,7 @@ class GreedyWordSwapWIRTruncated(GreedyWordSwapWIR):
         if self.wir_method != "random":
             index_order = np.array(indices_to_order)[(-index_scores).argsort()]
 
+        print(f"Completed WIR calculation, ordering {len(index_order)} words")
         return index_order, search_over
 
 
@@ -514,11 +520,14 @@ class AlzantotGeneticAlgorithm(GeneticAlgorithm):
 
 
 class AttackList(Attack):
+    def __call__(self, example, ground_truth_output):
+        return self.attack(example, ground_truth_output)
+
     def attack(self, example, ground_truth_output):
         """Attack a single example."""
         assert isinstance(
             example, (str, OrderedDict, AttackedText)
-        ), "`example` must either be `str`, `collections.OrderedDict`, `textattack.shared.AttackedText`."
+        ), "`example` must either be `str`, `OrderedDict`, `textattack.shared.AttackedText`."
         if isinstance(example, (str, OrderedDict)):
             example = AttackedText(example)
 
@@ -529,7 +538,9 @@ class AttackList(Attack):
         if goal_function_result.goal_status == GoalFunctionResultStatus.SKIPPED:
             return SkippedAttackResult(goal_function_result)
         else:
+            print(f"Starting attack on example (length {len(example.words)} words): '{str(example)[:100]}...'")
             result = self._attack(goal_function_result)
+            print(f"Attack completed - result: {type(result).__name__}")
             return result
 
 

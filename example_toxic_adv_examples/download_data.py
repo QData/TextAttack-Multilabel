@@ -8,6 +8,17 @@ import sys
 import subprocess
 
 
+def check_kaggle_cli():
+    """Check if kaggle CLI is installed, install if not."""
+    try:
+        subprocess.run(['kaggle', '--version'], check=True, capture_output=True)
+        print("Kaggle CLI is available.")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("Kaggle CLI not found, installing...")
+        subprocess.run([sys.executable, '-m', 'pip', 'install', 'kaggle'], check=True)
+        print("Kaggle CLI installed.")
+
+
 def setup_kaggle_api():
     """Setup Kaggle API key from environment variables instead of file."""
     username = os.getenv('KAGGLE_USERNAME')
@@ -15,6 +26,10 @@ def setup_kaggle_api():
 
     if not username or not key:
         print("Error: KAGGLE_USERNAME and KAGGLE_KEY environment variables must be set.")
+        print("Set them with:")
+        print("  export KAGGLE_USERNAME='your_username'")
+        print("  export KAGGLE_KEY='your_api_key'")
+        print("\nOr get your API key from: https://kaggle.com → Account → Create New API Token")
         sys.exit(1)
 
     # Create Kaggle directory if it doesn't exist
@@ -36,8 +51,8 @@ def download_dataset():
     print("Downloading Jigsaw Toxic Comments dataset...")
     try:
         subprocess.run([
-            'kaggle', 'competitions', 'download',
-            '-c', 'jigsaw-toxic-comment-classification-challenge',
+            'kaggle', 'datasets', 'download',
+            'julian3833/jigsaw-toxic-comment-classification-challenge',
             '-p', 'data'
         ], check=True)
     except subprocess.CalledProcessError as e:
@@ -51,18 +66,24 @@ def extract_files():
 
     # Create data directory
     os.makedirs('data', exist_ok=True)
+    # Create subdirectory for jigsaw
+    jigsaw_dir = os.path.join('data', 'jigsaw_toxic_comments')
+    os.makedirs(jigsaw_dir, exist_ok=True)
 
     # Find and extract zip files
     for file in os.listdir('data'):
         if file.endswith('.zip'):
             zip_path = os.path.join('data', file)
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall('data')
+                zip_ref.extractall(jigsaw_dir)
             print(f"Extracted {file}")
 
 
 def main():
     """Main download process."""
+    print("Checking Kaggle CLI...")
+    check_kaggle_cli()
+
     print("Setting up Kaggle API...")
     setup_kaggle_api()
 
