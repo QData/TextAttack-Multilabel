@@ -10,13 +10,13 @@ from textattack.goal_function_results import GoalFunctionResult
 
 class MultilabelClassificationGoalFunctionResult(GoalFunctionResult):
     def get_text_color_input(self):
-        return "red"
-
-    def get_text_color_perturbed(self):
         return "blue"
 
+    def get_text_color_perturbed(self):
+        return "red"
+
     def get_colored_output(self, color_method=None):
-        return str(self.output)
+        return str(self.output.cpu().tolist() if hasattr(self.output, 'cpu') else self.output)
 
 
 class MultilabelClassificationGoalFunction(GoalFunction):
@@ -64,26 +64,29 @@ class MultilabelClassificationGoalFunction(GoalFunction):
         self.labels_to_maximize = (
             [labels_to_maximize]
             if isinstance(labels_to_maximize, int)
-            else labels_to_maximize
+            else labels_to_maximize or []
         )
         self.labels_to_minimize = (
             [labels_to_minimize]
             if isinstance(labels_to_minimize, int)
-            else labels_to_minimize
+            else labels_to_minimize or []
         )
         self.maximize_target_score = maximize_target_score
         self.minimize_target_score = minimize_target_score
 
         assert (
-            labels_to_minimize or labels_to_maximize
-        ), f"{labels_to_maximize=} and {labels_to_minimize=}"
+            self.labels_to_minimize or self.labels_to_maximize
+        ), f"{self.labels_to_maximize=} and {self.labels_to_minimize=}"
 
     def _goal_function_result_type(self):
         return MultilabelClassificationGoalFunctionResult
 
-    def _process_model_outputs(self, inputs, outputs):
+    def _process_model_outputs(self, inputs=None, outputs=None):
         """Processes and validates a list of model outputs."""
-        if len(inputs) <= 3:  # Only log for small batches to avoid spam
+        if inputs is None:
+            inputs = ["dummy"]
+
+        if isinstance(inputs, list) and len(inputs) <= 3:  # Only log for small batches to avoid spam
             print(f"Making model prediction on {len(inputs)} inputs")
             # Log the first few words of first input if it's a string
             if inputs and isinstance(inputs[0], str):
@@ -92,7 +95,7 @@ class MultilabelClassificationGoalFunction(GoalFunction):
 
         # Automatically cast a list or ndarray of predictions to a tensor.
         if isinstance(outputs, list) or isinstance(outputs, np.ndarray):
-            outputs = torch.tensor(outputs)
+            outputs = torch.tensor(outputs, dtype=torch.float32)
         if not isinstance(outputs, torch.Tensor):
             raise TypeError(
                 "Must have list, np.ndarray, or torch.Tensor of "
@@ -100,23 +103,24 @@ class MultilabelClassificationGoalFunction(GoalFunction):
             )
 
         # Validation check on model score dimensions
+        expected_batch = len(inputs) if isinstance(inputs, (list, tuple)) else 1
         if outputs.ndim == 1:
             # Unsqueeze prediction, if it's been squeezed by the model.
-            if len(inputs) == 1:
+            if expected_batch == 1:
                 outputs = outputs.unsqueeze(dim=0)
             else:
                 raise ValueError(
-                    f"Model return score of shape {outputs.shape} for {len(inputs)} inputs."
+                    f"Model return score of shape {outputs.shape} for {expected_batch} inputs."
                 )
         elif outputs.ndim != 2:
             # If model somehow returns too may dimensions, throw an error.
             raise ValueError(
-                f"Model return score of shape {outputs.shape} for {len(inputs)} inputs."
+                f"Output must be 1D or 2D tensor, got shape {outputs.shape}"
             )
-        elif outputs.shape[0] != len(inputs):
+        elif outputs.shape[0] != expected_batch:
             # If model returns an incorrect number of scores, throw an error.
             raise ValueError(
-                f"Model return score of shape {outputs.shape} for {len(inputs)} inputs."
+                f"Model return score of shape {outputs.shape} for {expected_batch} inputs."
             )
         elif not ((outputs >= 0) & (outputs <= 1)).all():
             # Values in each row should be within range [0,1]. The model should return a
@@ -138,7 +142,8 @@ class MultilabelClassificationGoalFunction(GoalFunction):
         )
 
         score = model_output[labels_to_maximize].sum()
-        score += 1 - model_output[labels_to_minimize].sum()
+        if self.labels_to_minimize:
+            score += 1 - model_output[labels_to_minimize].sum()
         return score
 
     def _is_goal_complete(
@@ -151,13 +156,13 @@ class MultilabelClassificationGoalFunction(GoalFunction):
         """
         max_complete = True if len(self.labels_to_maximize) == 0 else (
             model_output[self.labels_to_maximize] > self.maximize_target_score
-        ).all()  # Changed from .any() to .all() - all labels must exceed threshold
+        ).any()  ### .any() or .all() - any labels must exceed threshold due to multilabel nature
 
         min_complete = True if len(self.labels_to_minimize) == 0 else (
             model_output[self.labels_to_minimize] < self.minimize_target_score
         ).all()
 
-        return max_complete and min_complete
+        return bool(max_complete and min_complete)
 
 
 __all__ = [

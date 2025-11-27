@@ -140,7 +140,7 @@ Wraps HuggingFace models for multilabel classification with:
 - Automatic device detection (CUDA/CPU)
 - Gradient computation for gradient-based attacks
 - Sigmoid activation for multilabel outputs
-- Support for T5 and standard transformer models
+- Support for standard transformer models
 
 #### **MultilabelClassificationGoalFunction**
 Goal function that can:

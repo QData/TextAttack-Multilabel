@@ -109,7 +109,7 @@ class TestProcessModelOutputs:
     def test_process_tensor_2d(self):
         """Test processing 2D tensor (batch of predictions)."""
         outputs = torch.tensor([[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]])
-        result = self.goal_func._process_model_outputs(outputs)
+        result = self.goal_func._process_model_outputs(outputs=outputs)
 
         assert isinstance(result, torch.Tensor)
         assert result.shape == (1, 6)
@@ -118,7 +118,7 @@ class TestProcessModelOutputs:
     def test_process_tensor_1d(self):
         """Test processing 1D tensor (single prediction) - should unsqueeze."""
         outputs = torch.tensor([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
-        result = self.goal_func._process_model_outputs(outputs)
+        result = self.goal_func._process_model_outputs(outputs=outputs)
 
         assert isinstance(result, torch.Tensor)
         assert result.shape == (1, 6)
@@ -127,7 +127,7 @@ class TestProcessModelOutputs:
     def test_process_numpy_array(self):
         """Test processing numpy array (converted to tensor)."""
         outputs = np.array([[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]])
-        result = self.goal_func._process_model_outputs(outputs)
+        result = self.goal_func._process_model_outputs(outputs=outputs)
 
         assert isinstance(result, torch.Tensor)
         assert result.shape == (1, 6)
@@ -136,38 +136,38 @@ class TestProcessModelOutputs:
     def test_process_list(self):
         """Test processing list (converted to tensor)."""
         outputs = [[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]]
-        result = self.goal_func._process_model_outputs(outputs)
+        result = self.goal_func._process_model_outputs(outputs=outputs)
 
         assert isinstance(result, torch.Tensor)
         assert result.shape == (1, 6)
 
     def test_process_invalid_type_raises_error(self):
         """Test that invalid types raise TypeError."""
-        with pytest.raises(TypeError, match="must be a torch.Tensor"):
-            self.goal_func._process_model_outputs("invalid")
+        with pytest.raises(TypeError, match="Must have"):
+            self.goal_func._process_model_outputs(outputs="invalid")
 
-        with pytest.raises(TypeError, match="must be a torch.Tensor"):
-            self.goal_func._process_model_outputs(123)
+        with pytest.raises(TypeError, match="Must have"):
+            self.goal_func._process_model_outputs(outputs=123)
 
     def test_process_3d_tensor_raises_error(self):
         """Test that 3D tensors raise ValueError."""
         outputs = torch.randn(2, 3, 4)
 
         with pytest.raises(ValueError, match="must be 1D or 2D"):
-            self.goal_func._process_model_outputs(outputs)
+            self.goal_func._process_model_outputs(outputs=outputs)
 
     def test_process_wrong_batch_size_raises_error(self):
         """Test that wrong batch size raises ValueError."""
         outputs = torch.randn(3, 6)  # batch_size=3, but we expect 1
 
-        with pytest.raises(ValueError, match="Batch size is 3, but expected 1"):
-            self.goal_func._process_model_outputs(outputs)
+        with pytest.raises(ValueError, match=r"Model return score of shape .* for 1 inputs\."):
+            self.goal_func._process_model_outputs(outputs=outputs)
 
     def test_process_values_out_of_range_applies_sigmoid(self):
         """Test that values outside [0,1] trigger sigmoid application."""
         # Raw logits (outside [0,1] range)
         outputs = torch.tensor([[2.5, -1.3, 0.8, -0.5, 1.2, 0.3]])
-        result = self.goal_func._process_model_outputs(outputs)
+        result = self.goal_func._process_model_outputs(outputs=outputs)
 
         # Result should be sigmoid of input
         expected = torch.sigmoid(outputs)
@@ -176,7 +176,7 @@ class TestProcessModelOutputs:
     def test_process_values_in_range_no_sigmoid(self):
         """Test that values in [0,1] are not modified."""
         outputs = torch.tensor([[0.1, 0.2, 0.3, 0.4, 0.5, 0.6]])
-        result = self.goal_func._process_model_outputs(outputs)
+        result = self.goal_func._process_model_outputs(outputs=outputs)
 
         # Should be unchanged (no sigmoid)
         assert torch.allclose(result, outputs)
@@ -184,14 +184,14 @@ class TestProcessModelOutputs:
     def test_process_edge_case_zeros(self):
         """Test processing all-zero outputs."""
         outputs = torch.zeros(1, 6)
-        result = self.goal_func._process_model_outputs(outputs)
+        result = self.goal_func._process_model_outputs(outputs=outputs)
 
         assert torch.allclose(result, outputs)
 
     def test_process_edge_case_ones(self):
         """Test processing all-one outputs."""
         outputs = torch.ones(1, 6)
-        result = self.goal_func._process_model_outputs(outputs)
+        result = self.goal_func._process_model_outputs(outputs=outputs)
 
         assert torch.allclose(result, outputs)
 

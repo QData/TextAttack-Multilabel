@@ -196,3 +196,4 @@ cython_debug/
 example_toxic_adv_examples/data/*
 data/*
 results/*
+example_toxic_adv_examples/results/*
